@@ -25,7 +25,7 @@ El proyecto viene completamente orquestado con Docker y Docker Compose, configur
 
 1. Clonar el repositorio y entrar a la estructura principal:
    ```bash
-   git clone <URL_REPO>
+   git clone https://github.com/Margumedo/bookstore-inventory-api.git
    cd bookstore-inventory-api
    ```
 2. Levantar la infraestructura. El servicio `web` automáticamente se encargará de ejecutar las migraciones (`manage.py migrate`) e iniciar el servidor:
