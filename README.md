@@ -67,6 +67,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 python manage.py migrate
+python manage.py createcachetable
 python manage.py runserver
 ```
 
@@ -155,7 +156,7 @@ Ver `.env.example`. Las principales:
 | `PROFIT_MARGIN_PERCENTAGE` | Margen (default `40`) |
 | `EXCHANGE_RATE_API_URL` | API de tasas USD |
 | `EXCHANGE_RATE_TIMEOUT_SECONDS` | Timeout HTTP |
-| `EXCHANGE_RATE_CACHE_SECONDS` | Cache locmem (~10 min) |
+| `EXCHANGE_RATE_CACHE_SECONDS` | Cache de tasas en PostgreSQL (~10 min, compartida entre workers) |
 
 En produccion ademas: `DJANGO_SETTINGS_MODULE=bookstore.settings.production`.
 

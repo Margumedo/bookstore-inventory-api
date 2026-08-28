@@ -177,8 +177,8 @@ EXCHANGE_RATE_CACHE_SECONDS = config(
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'bookstore-exchange-rates',
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'exchange_rate_cache',
         'TIMEOUT': EXCHANGE_RATE_CACHE_SECONDS,
     }
 }

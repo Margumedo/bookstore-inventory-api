@@ -16,8 +16,16 @@ os.environ.setdefault(
 )
 
 
+@pytest.fixture(scope='session')
+def django_db_setup(django_db_setup, django_db_blocker):
+    with django_db_blocker.unblock():
+        from django.core.management import call_command
+
+        call_command('createcachetable', verbosity=0)
+
+
 @pytest.fixture(autouse=True)
-def _clear_cache():
+def _clear_cache(db):
     from django.core.cache import cache
 
     cache.clear()

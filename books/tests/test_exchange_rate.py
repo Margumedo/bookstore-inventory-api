@@ -55,6 +55,16 @@ class TestExchangeRateService:
         assert rate == Decimal('0.85')
         assert source == RATE_SOURCE_FALLBACK
 
+    @patch('books.services.exchange_rate.requests.get', side_effect=requests.Timeout)
+    def test_fallback_is_cached(self, mock_get):
+        ExchangeRateService().get_rate('EUR')
+        mock_get.reset_mock()
+
+        rate, source = ExchangeRateService().get_rate('EUR')
+        assert rate == Decimal('0.85')
+        assert source == RATE_SOURCE_CACHE
+        mock_get.assert_not_called()
+
     @patch('books.services.exchange_rate.requests.get')
     def test_invalid_payload_uses_fallback(self, mock_get):
         response = MagicMock()

@@ -3,6 +3,7 @@ set -e
 
 echo "Aplicando migraciones..."
 python manage.py migrate --noinput
+python manage.py createcachetable
 
 echo "Recolectando archivos estaticos..."
 python manage.py collectstatic --noinput

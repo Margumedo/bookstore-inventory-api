@@ -1,8 +1,8 @@
 """
 Servicio de tasas de cambio USD -> moneda local.
 
-Consulta la API externa con timeout, cachea el resultado y usa una tasa
-de fallback si el proveedor no responde.
+Consulta la API externa con timeout, cachea el resultado (tambien el
+fallback) y comparte la cache entre workers via DatabaseCache.
 """
 
 from __future__ import annotations
@@ -30,18 +30,33 @@ class ExchangeRateService:
         currency = (target_currency or settings.LOCAL_CURRENCY).upper()
         cache_key = f'exchange_rate:USD:{currency}'
 
-        cached = cache.get(cache_key)
-        if cached is not None:
-            return Decimal(str(cached)), RATE_SOURCE_CACHE
+        cached_rate = self._cached_rate(cache_key)
+        if cached_rate is not None:
+            return cached_rate, RATE_SOURCE_CACHE
 
         try:
             rate = self._fetch_live_rate(currency)
         except (requests.RequestException, ValueError) as exc:
             logger.warning('Fallo la API de tasas (%s); se usa fallback.', exc)
-            return self._fallback_rate()
+            return self._fallback_rate(cache_key)
 
-        cache.set(cache_key, str(rate), settings.EXCHANGE_RATE_CACHE_SECONDS)
+        self._store_rate(cache_key, rate)
         return rate, RATE_SOURCE_LIVE
+
+    def _cached_rate(self, cache_key: str) -> Decimal | None:
+        cached = cache.get(cache_key)
+        if cached is None:
+            return None
+        if isinstance(cached, dict) and 'rate' in cached:
+            return Decimal(str(cached['rate']))
+        return Decimal(str(cached))
+
+    def _store_rate(self, cache_key: str, rate: Decimal) -> None:
+        cache.set(
+            cache_key,
+            {'rate': str(rate)},
+            settings.EXCHANGE_RATE_CACHE_SECONDS,
+        )
 
     def _fetch_live_rate(self, currency: str) -> Decimal:
         response = requests.get(
@@ -68,8 +83,10 @@ class ExchangeRateService:
             raise ValueError(f'Tasa invalida para {currency}.')
         return rate
 
-    def _fallback_rate(self) -> tuple[Decimal, str]:
+    def _fallback_rate(self, cache_key: str) -> tuple[Decimal, str]:
         rate = settings.DEFAULT_EXCHANGE_RATE
         if rate is None or rate <= 0:
             raise ExchangeRateUnavailableError('No se pudo obtener una tasa de cambio.')
-        return Decimal(str(rate)), RATE_SOURCE_FALLBACK
+        rate = Decimal(str(rate))
+        self._store_rate(cache_key, rate)
+        return rate, RATE_SOURCE_FALLBACK
