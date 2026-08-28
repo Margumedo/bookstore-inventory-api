@@ -3,6 +3,7 @@ Configuracion base del proyecto Django.
 Compartida entre development y production.
 """
 
+from decimal import Decimal
 from pathlib import Path
 
 from decouple import config, Csv
@@ -135,7 +136,7 @@ SPECTACULAR_SETTINGS = {
 
 LOCAL_CURRENCY = config('LOCAL_CURRENCY', default='EUR')
 
-DEFAULT_EXCHANGE_RATE = config('DEFAULT_EXCHANGE_RATE', default='0.85', cast=float)
+DEFAULT_EXCHANGE_RATE = config('DEFAULT_EXCHANGE_RATE', default='0.85', cast=Decimal)
 
 PROFIT_MARGIN_PERCENTAGE = config('PROFIT_MARGIN_PERCENTAGE', default='40', cast=int)
 

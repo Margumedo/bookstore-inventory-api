@@ -16,7 +16,10 @@ services:
       retries: 5
 
   web:
-    build: .
+    build:
+      context: .
+      args:
+        REQUIREMENTS: requirements-dev.txt
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
@@ -24,7 +27,6 @@ services:
       - "8000:8000"
     environment:
       - DJANGO_SECRET_KEY=dev-secret-key-solo-para-desarrollo-local
-      - DJANGO_DEBUG=true
       - DJANGO_SETTINGS_MODULE=bookstore.settings.development
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
       - DATABASE_URL=postgres://bookstore_user:bookstore_pass@db:5432/bookstore
