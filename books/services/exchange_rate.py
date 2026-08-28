@@ -36,7 +36,7 @@ class ExchangeRateService:
 
         try:
             rate = self._fetch_live_rate(currency)
-        except Exception as exc:
+        except (requests.RequestException, ValueError) as exc:
             logger.warning('Fallo la API de tasas (%s); se usa fallback.', exc)
             return self._fallback_rate()
 

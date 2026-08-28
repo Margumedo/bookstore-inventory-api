@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
+from django.test import override_settings
 from rest_framework.test import APIClient
 
 from books.tests.factories import BookFactory
@@ -202,3 +203,10 @@ class TestCalculatePrice:
     def test_calculate_price_missing_book(self, api_client):
         response = api_client.post(f'{BOOKS_URL}99999/calculate-price/')
         assert response.status_code == 404
+
+    @override_settings(DEFAULT_EXCHANGE_RATE=Decimal('0'))
+    @patch('books.services.exchange_rate.requests.get', side_effect=requests.Timeout)
+    def test_calculate_price_unavailable_returns_503(self, mock_get, api_client):
+        book = BookFactory(cost_usd=Decimal('15.99'))
+        response = api_client.post(f'{BOOKS_URL}{book.id}/calculate-price/')
+        assert response.status_code == 503

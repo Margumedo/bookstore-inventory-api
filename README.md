@@ -24,7 +24,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-La API estara disponible en `http://localhost:8000/api/`
+La API estara disponible en `http://localhost:8000/api/v1/`
 
 ## Ejecucion local (sin Docker)
 
@@ -39,18 +39,20 @@ python manage.py runserver
 
 ## Endpoints
 
+Las rutas usan barra final (convencion Django/DRF). Prefijo canonico: `/api/v1/`.
+
 | Metodo | Ruta | Descripcion |
 |--------|------|-------------|
-| POST | `/api/books/` | Crear un libro |
-| GET | `/api/books/` | Listar libros (paginado) |
-| GET | `/api/books/{id}/` | Obtener libro por ID |
-| PUT | `/api/books/{id}/` | Actualizar libro |
-| DELETE | `/api/books/{id}/` | Eliminar libro |
-| GET | `/api/books/?category={category}` | Filtrar por categoria |
-| GET | `/api/books/low-stock/?threshold=10` | Libros con stock bajo |
-| POST | `/api/books/{id}/calculate-price/` | Calcular precio de venta sugerido |
-| GET | `/api/health/` | Health check |
-| GET | `/api/docs/` | Documentacion Swagger |
+| POST | `/api/v1/books/` | Crear un libro |
+| GET | `/api/v1/books/` | Listar libros (paginado) |
+| GET | `/api/v1/books/{id}/` | Obtener libro por ID |
+| PUT | `/api/v1/books/{id}/` | Actualizar libro |
+| PATCH | `/api/v1/books/{id}/` | Actualizacion parcial |
+| DELETE | `/api/v1/books/{id}/` | Eliminar libro |
+| GET | `/api/v1/books/?category={category}` | Filtrar por categoria |
+| GET | `/api/v1/books/search/?category={category}` | Buscar por categoria |
+| GET | `/api/v1/books/low-stock/?threshold=10` | Libros con stock bajo |
+| POST | `/api/v1/books/{id}/calculate-price/` | Calcular precio de venta sugerido |
 
 ## Variables de entorno
 
