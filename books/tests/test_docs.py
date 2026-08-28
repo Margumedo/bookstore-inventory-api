@@ -2,7 +2,10 @@
 Tests de health, OpenAPI y Swagger.
 """
 
+from unittest.mock import patch
+
 import pytest
+from django.db.utils import OperationalError
 from rest_framework.test import APIClient
 
 
@@ -17,6 +20,16 @@ class TestDocsAndHealth:
         response = api_client.get('/health/')
         assert response.status_code == 200
         assert response.json() == {'status': 'ok'}
+
+    def test_health_returns_503_when_database_is_down(self, api_client):
+        with patch('bookstore.views.connection.cursor') as mock_cursor:
+            mock_cursor.side_effect = OperationalError('connection refused')
+            response = api_client.get('/health/')
+        assert response.status_code == 503
+        assert response.json() == {
+            'status': 'error',
+            'detail': 'Base de datos no disponible.',
+        }
 
     def test_openapi_schema_includes_search_category(self, api_client):
         response = api_client.get('/api/schema/')

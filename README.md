@@ -21,6 +21,7 @@ Postman: importar `postman/Bookstore_Inventory_API.postman_collection.json` y Se
 ## Decisiones
 
 - Prefijo `/api/v1/` y barra final (convencion Django/DRF).
+- Sin autenticacion: el enunciado no la pide; los endpoints son publicos (`AllowAny`).
 - ISBN: se quitan guiones y espacios; deben quedar exactamente 10 o 13 digitos.
 - Moneda local: `LOCAL_CURRENCY` (por defecto `EUR`).
 - Precio sugerido: `cost_usd × tasa × 1.40`, redondeo half-up por paso (`15.99 × 0.85 = 13.59`, luego `19.03`).
@@ -127,7 +128,7 @@ Las rutas usan barra final. Prefijo canonico: `/api/v1/`.
 | GET | `/api/v1/books/search/?category={category}` | Buscar por categoria |
 | GET | `/api/v1/books/low-stock/?threshold=10` | Libros con stock bajo |
 | POST | `/api/v1/books/{id}/calculate-price/` | Calcular precio de venta sugerido |
-| GET | `/health/` | Health check |
+| GET | `/health/` | Health check (incluye PostgreSQL) |
 | GET | `/api/docs/` | Swagger UI |
 | GET | `/api/schema/` | OpenAPI schema |
 | GET | `/` | Redirige a Swagger |
