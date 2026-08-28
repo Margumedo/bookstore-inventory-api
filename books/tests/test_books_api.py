@@ -79,6 +79,7 @@ class TestBookCRUD:
     def test_retrieve_missing_book(self, api_client):
         response = api_client.get(f'{BOOKS_URL}99999/')
         assert response.status_code == 404
+        assert response.data['detail'] == 'No encontrado.'
 
     def test_update_book(self, api_client):
         book = BookFactory(title='El Quijote', isbn='9788437604947')
@@ -91,6 +92,7 @@ class TestBookCRUD:
     def test_update_missing_book(self, api_client):
         response = api_client.put(f'{BOOKS_URL}99999/', _payload(), format='json')
         assert response.status_code == 404
+        assert response.data['detail'] == 'No encontrado.'
 
     def test_partial_update_book(self, api_client):
         book = BookFactory(title='El Quijote', stock_quantity=25)
@@ -113,6 +115,7 @@ class TestBookCRUD:
     def test_delete_missing_book(self, api_client):
         response = api_client.delete(f'{BOOKS_URL}99999/')
         assert response.status_code == 404
+        assert response.data['detail'] == 'No encontrado.'
 
 
 @pytest.mark.django_db
@@ -203,6 +206,7 @@ class TestCalculatePrice:
     def test_calculate_price_missing_book(self, api_client):
         response = api_client.post(f'{BOOKS_URL}99999/calculate-price/')
         assert response.status_code == 404
+        assert response.data['detail'] == 'No encontrado.'
 
     @override_settings(DEFAULT_EXCHANGE_RATE=Decimal('0'))
     @patch('books.services.exchange_rate.requests.get', side_effect=requests.Timeout)

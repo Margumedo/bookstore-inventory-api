@@ -26,6 +26,8 @@ docker compose up --build
 
 La API estara disponible en `http://localhost:8000/api/v1/`
 
+Swagger: `http://localhost:8000/api/docs/`
+
 ## Ejecucion local (sin Docker)
 
 ```bash
@@ -53,6 +55,10 @@ Las rutas usan barra final (convencion Django/DRF). Prefijo canonico: `/api/v1/`
 | GET | `/api/v1/books/search/?category={category}` | Buscar por categoria |
 | GET | `/api/v1/books/low-stock/?threshold=10` | Libros con stock bajo |
 | POST | `/api/v1/books/{id}/calculate-price/` | Calcular precio de venta sugerido |
+| GET | `/health/` | Health check |
+| GET | `/api/docs/` | Swagger UI |
+| GET | `/api/schema/` | OpenAPI schema |
+| GET | `/` | Redirige a Swagger |
 
 ## Variables de entorno
 
