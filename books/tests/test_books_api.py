@@ -164,6 +164,11 @@ class TestBookFilters:
         assert response.status_code == 400
         assert 'threshold' in response.data
 
+    def test_low_stock_negative_threshold(self, api_client):
+        response = api_client.get(f'{BOOKS_URL}low-stock/', {'threshold': -1})
+        assert response.status_code == 400
+        assert 'threshold' in response.data
+
     def test_list_is_paginated(self, api_client):
         BookFactory.create_batch(21)
         response = api_client.get(BOOKS_URL)

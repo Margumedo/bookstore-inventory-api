@@ -13,8 +13,8 @@ def api_exception_handler(exc, context):
         return None
 
     if isinstance(exc, (NotFound, Http404)) or response.status_code == 404:
-        response.data = {'detalle': 'No encontrado.'}
+        response.data = {'detail': 'No encontrado.'}
     elif isinstance(exc, MethodNotAllowed):
-        response.data = {'detalle': 'Metodo no permitido.'}
+        response.data = {'detail': 'Metodo no permitido.'}
 
     return response
