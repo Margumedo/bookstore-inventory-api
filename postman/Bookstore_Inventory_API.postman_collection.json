@@ -1,0 +1,505 @@
+{
+  "info": {
+    "_postman_id": "b00k570r-e1nv-4e70-9a91-c011ec710001",
+    "name": "Bookstore Inventory API",
+    "description": "Coleccion de entrega. {{base_url}} apunta a produccion. book_id va en path (Params) e isbn en el body. Importar y correr en orden.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://bookstore-inventory-api-phzz.onrender.com"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const bookId = pm.variables.get('book_id');",
+          "const skipPathOverride = pm.info.requestName && pm.info.requestName.indexOf('404') !== -1;",
+          "if (bookId && !skipPathOverride) {",
+          "    pm.request.url.variables.upsert({ key: 'book_id', value: String(bookId) });",
+          "}",
+          "const isbn = pm.variables.get('isbn');",
+          "if (isbn && pm.request.method === 'PUT' && pm.request.body && pm.request.body.raw) {",
+          "    try {",
+          "        const body = JSON.parse(pm.request.body.raw);",
+          "        if (Object.prototype.hasOwnProperty.call(body, 'isbn')) {",
+          "            body.isbn = isbn;",
+          "            pm.request.body.raw = JSON.stringify(body);",
+          "        }",
+          "    } catch (e) {}",
+          "}",
+          ""
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Health",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Health responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().status).to.eql('ok');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health/",
+          "host": ["{{base_url}}"],
+          "path": ["health", ""]
+        }
+      }
+    },
+    {
+      "name": "02 Crear libro",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Libro creado (201)', function () {",
+              "    pm.response.to.have.status(201);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.id).to.be.a('number');",
+              "    pm.expect(body.isbn).to.be.a('string');",
+              "    pm.expect(body.selling_price_local).to.eql(null);",
+              "    pm.variables.set('book_id', String(body.id));",
+              "    pm.variables.set('isbn', body.isbn);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"El Quijote\",\n  \"author\": \"Miguel de Cervantes\",\n  \"isbn\": \"9788437604947\",\n  \"cost_usd\": \"15.99\",\n  \"stock_quantity\": 25,\n  \"category\": \"Literatura Clasica\",\n  \"supplier_country\": \"ES\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/books/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "books", ""]
+        }
+      }
+    },
+    {
+      "name": "03 Listar libros",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Listado paginado (200)', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body).to.have.property('count');",
+              "    pm.expect(body.results).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/books/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "books", ""]
+        }
+      }
+    },
+    {
+      "name": "04 Obtener libro por ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Detalle del libro (200)', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const expected = pm.variables.get('book_id');",
+              "    if (expected) {",
+              "        pm.expect(pm.response.json().id).to.eql(Number(expected));",
+              "    } else {",
+              "        pm.expect(pm.response.json().id).to.be.a('number');",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/books/:book_id/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "books", ":book_id", ""],
+          "variable": [
+            {
+              "key": "book_id",
+              "value": "1",
+              "description": "ID del libro"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "05 Filtrar por categoria",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Filtro por category (200)', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json()).to.have.property('results');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/books/?category=Literatura Clasica",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "books", ""],
+          "query": [
+            {
+              "key": "category",
+              "value": "Literatura Clasica",
+              "description": "Filtrar por categoria"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "06 Buscar por categoria",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Search por category (200)', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json()).to.have.property('results');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/books/search/?category=Literatura Clasica",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "books", "search", ""],
+          "query": [
+            {
+              "key": "category",
+              "value": "Literatura Clasica",
+              "description": "Categoria a buscar"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "07 Low stock",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Low-stock (200)', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json()).to.have.property('results');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/books/low-stock/?threshold=30",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "books", "low-stock", ""],
+          "query": [
+            {
+              "key": "threshold",
+              "value": "30",
+              "description": "Stock maximo a considerar"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "08 Calcular precio",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Precio calculado (200)', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.cost_usd).to.eql('15.99');",
+              "    pm.expect(body.margin_percentage).to.eql(40);",
+              "    pm.expect(body.currency).to.eql('EUR');",
+              "    pm.expect(body.rate_source).to.be.oneOf(['live', 'cache', 'fallback']);",
+              "    pm.expect(body.selling_price_local).to.not.eql(null);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/books/:book_id/calculate-price/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "books", ":book_id", "calculate-price", ""],
+          "variable": [
+            {
+              "key": "book_id",
+              "value": "1",
+              "description": "ID del libro"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "09 Actualizar libro (PUT)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('PUT reemplaza el recurso (200)', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().stock_quantity).to.eql(10);",
+              "    pm.expect(pm.response.json().title).to.eql('El Quijote (ed. revisada)');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"El Quijote (ed. revisada)\",\n  \"author\": \"Miguel de Cervantes\",\n  \"isbn\": \"9788437604947\",\n  \"cost_usd\": \"15.99\",\n  \"stock_quantity\": 10,\n  \"category\": \"Literatura Clasica\",\n  \"supplier_country\": \"ES\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/books/:book_id/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "books", ":book_id", ""],
+          "variable": [
+            {
+              "key": "book_id",
+              "value": "1",
+              "description": "ID del libro"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "10 Actualizar parcial (PATCH)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('PATCH actualiza stock (200)', function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.expect(pm.response.json().stock_quantity).to.eql(8);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"stock_quantity\": 8\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/books/:book_id/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "books", ":book_id", ""],
+          "variable": [
+            {
+              "key": "book_id",
+              "value": "1",
+              "description": "ID del libro"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "11 ISBN invalido (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('ISBN invalido responde 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "    pm.expect(pm.response.json()).to.have.property('isbn');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Invalido\",\n  \"author\": \"QA\",\n  \"isbn\": \"123\",\n  \"cost_usd\": \"10.00\",\n  \"stock_quantity\": 1,\n  \"category\": \"Test\",\n  \"supplier_country\": \"ES\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/books/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "books", ""]
+        }
+      }
+    },
+    {
+      "name": "12 Libro inexistente (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('404 con detail en espanol', function () {",
+              "    pm.response.to.have.status(404);",
+              "    pm.expect(pm.response.json().detail).to.eql('No encontrado.');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/books/:book_id/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "books", ":book_id", ""],
+          "variable": [
+            {
+              "key": "book_id",
+              "value": "999999",
+              "description": "ID inexistente para forzar 404"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "13 Eliminar libro",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Libro eliminado (204)', function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/books/:book_id/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "books", ":book_id", ""],
+          "variable": [
+            {
+              "key": "book_id",
+              "value": "1",
+              "description": "ID del libro"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
