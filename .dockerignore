@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.env.example
+*.md
+__pycache__
+*.pyc
+*.pyo
+venv/
+.venv/
+.pytest_cache/
+htmlcov/
+.coverage
+*.pdf
+docker-compose.yml
+docker-compose.override.yml

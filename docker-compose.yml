@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: bookstore
+      POSTGRES_USER: bookstore_user
+      POSTGRES_PASSWORD: bookstore_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookstore_user -d bookstore"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SECRET_KEY=dev-secret-key-solo-para-desarrollo-local
+      - DJANGO_DEBUG=true
+      - DJANGO_SETTINGS_MODULE=bookstore.settings.development
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+      - DATABASE_URL=postgres://bookstore_user:bookstore_pass@db:5432/bookstore
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
