@@ -135,24 +135,11 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'Bookstore Inventory API',
     'DESCRIPTION': (
         'API REST para gestion de inventario de librerias con validacion '
-        'de precios en tiempo real. Prefijo canonico: /api/v1/. Las rutas '
-        'usan barra final. Moneda local configurable con LOCAL_CURRENCY '
-        '(por defecto EUR). Si la API de tasas falla, se usa '
-        'DEFAULT_EXCHANGE_RATE y la respuesta sigue siendo HTTP 200.'
+        'de precios en tiempo real.'
     ),
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'SCHEMA_PATH_PREFIX': r'/api/v1/',
-    'SERVERS': [
-        {
-            'url': 'http://localhost:8000',
-            'description': 'Local',
-        },
-        {
-            'url': 'https://bookstore-inventory-api-phzz.onrender.com',
-            'description': 'Production',
-        },
-    ],
     'TAGS': [
         {
             'name': 'Libros',

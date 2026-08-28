@@ -24,13 +24,8 @@ class TestDocsAndHealth:
         schema = response.content.decode()
         assert '/books/search/' in schema
         assert 'category' in schema
-
-    def test_openapi_schema_declares_local_and_production_servers(self, api_client):
-        response = api_client.get('/api/schema/')
-        assert response.status_code == 200
-        schema = response.content.decode()
-        assert 'http://localhost:8000' in schema
-        assert 'https://bookstore-inventory-api-phzz.onrender.com' in schema
+        assert 'gestion de inventario de librerias' in schema
+        assert 'http://localhost:8000' not in schema
 
     def test_swagger_ui(self, api_client):
         response = api_client.get('/api/docs/')
