@@ -62,3 +62,15 @@ class BookSerializer(serializers.ModelSerializer):
                 'supplier_country debe ser un codigo de pais de dos letras.'
             )
         return normalized
+
+
+class PriceCalculationSerializer(serializers.Serializer):
+    book_id = serializers.IntegerField()
+    cost_usd = serializers.DecimalField(max_digits=10, decimal_places=2)
+    exchange_rate = serializers.DecimalField(max_digits=18, decimal_places=8)
+    cost_local = serializers.DecimalField(max_digits=10, decimal_places=2)
+    margin_percentage = serializers.IntegerField()
+    selling_price_local = serializers.DecimalField(max_digits=10, decimal_places=2)
+    currency = serializers.CharField()
+    rate_source = serializers.CharField()
+    calculation_timestamp = serializers.DateTimeField()

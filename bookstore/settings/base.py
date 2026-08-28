@@ -150,3 +150,18 @@ EXCHANGE_RATE_TIMEOUT_SECONDS = config(
     default='5',
     cast=int,
 )
+
+EXCHANGE_RATE_CACHE_SECONDS = config(
+    'EXCHANGE_RATE_CACHE_SECONDS',
+    default='600',
+    cast=int,
+)
+
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'bookstore-exchange-rates',
+        'TIMEOUT': EXCHANGE_RATE_CACHE_SECONDS,
+    }
+}

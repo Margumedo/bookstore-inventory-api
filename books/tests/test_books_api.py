@@ -2,13 +2,25 @@
 Tests de los endpoints CRUD, filtros y paginacion.
 """
 
+from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
 import pytest
+import requests
 from rest_framework.test import APIClient
 
 from books.tests.factories import BookFactory
 
 
 BOOKS_URL = '/api/v1/books/'
+
+
+def _ok_response(rates):
+    response = MagicMock()
+    response.status_code = 200
+    response.json.return_value = {'base': 'USD', 'rates': rates}
+    response.raise_for_status.return_value = None
+    return response
 
 
 def _payload(**overrides):
@@ -155,3 +167,38 @@ class TestBookFilters:
         assert response.data['count'] == 21
         assert len(response.data['results']) == 20
         assert response.data['next'] is not None
+
+
+@pytest.mark.django_db
+class TestCalculatePrice:
+    @patch('books.services.exchange_rate.requests.get')
+    def test_calculate_price_live(self, mock_get, api_client):
+        mock_get.return_value = _ok_response({'EUR': '0.85'})
+        book = BookFactory(cost_usd=Decimal('15.99'))
+
+        response = api_client.post(f'{BOOKS_URL}{book.id}/calculate-price/')
+        assert response.status_code == 200
+        assert response.data['book_id'] == book.id
+        assert response.data['cost_usd'] == '15.99'
+        assert Decimal(response.data['exchange_rate']) == Decimal('0.85')
+        assert response.data['cost_local'] == '13.59'
+        assert response.data['margin_percentage'] == 40
+        assert response.data['selling_price_local'] == '19.03'
+        assert response.data['currency'] == 'EUR'
+        assert response.data['rate_source'] == 'live'
+        assert 'calculation_timestamp' in response.data
+
+        book.refresh_from_db()
+        assert book.selling_price_local == Decimal('19.03')
+
+    @patch('books.services.exchange_rate.requests.get', side_effect=requests.Timeout)
+    def test_calculate_price_fallback_on_timeout(self, mock_get, api_client):
+        book = BookFactory(cost_usd=Decimal('15.99'))
+        response = api_client.post(f'{BOOKS_URL}{book.id}/calculate-price/')
+        assert response.status_code == 200
+        assert response.data['rate_source'] == 'fallback'
+        assert response.data['selling_price_local'] == '19.03'
+
+    def test_calculate_price_missing_book(self, api_client):
+        response = api_client.post(f'{BOOKS_URL}99999/calculate-price/')
+        assert response.status_code == 404
