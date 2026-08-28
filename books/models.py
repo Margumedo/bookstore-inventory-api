@@ -37,10 +37,10 @@ class Book(models.Model):
         validators=[
             RegexValidator(
                 regex=r'^[A-Za-z]{2}$',
-                message='supplier_country must be an ISO 3166-1 alpha-2 code.',
+                message='supplier_country must be a two-letter country code.',
             )
         ],
-        help_text='ISO 3166-1 alpha-2 country code, e.g. ES.',
+        help_text='Two-letter country code, e.g. ES.',
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

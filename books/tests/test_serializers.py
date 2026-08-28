@@ -6,7 +6,6 @@ import pytest
 
 from books.serializers import BookSerializer
 from books.tests.factories import BookFactory
-from books.validators import build_isbn13
 
 
 def _payload(**overrides):
@@ -41,6 +40,15 @@ class TestBookSerializer:
         serializer = BookSerializer(data=_payload(isbn='0-306-40615-2'))
         assert serializer.is_valid(), serializer.errors
         assert serializer.validated_data['isbn'] == '0306406152'
+
+    def test_accepts_10_and_13_digit_isbn_without_checksum(self):
+        isbn10 = BookSerializer(data=_payload(isbn='1111111111'))
+        assert isbn10.is_valid(), isbn10.errors
+        assert isbn10.validated_data['isbn'] == '1111111111'
+
+        isbn13 = BookSerializer(data=_payload(isbn='1111111111111'))
+        assert isbn13.is_valid(), isbn13.errors
+        assert isbn13.validated_data['isbn'] == '1111111111111'
 
     def test_invalid_isbn_returns_error(self):
         serializer = BookSerializer(data=_payload(isbn='12345'))
@@ -102,8 +110,8 @@ class TestBookSerializer:
         assert book.selling_price_local is None
 
     def test_unique_isbn_uses_normalized_value(self):
-        BookFactory(isbn=build_isbn13('978000000001'))
-        serializer = BookSerializer(data=_payload(isbn=build_isbn13('978000000001')))
+        BookFactory(isbn='9780000000001')
+        serializer = BookSerializer(data=_payload(isbn='9780000000001'))
         assert serializer.is_valid() is False
         assert 'isbn' in serializer.errors
 

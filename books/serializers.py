@@ -59,6 +59,6 @@ class BookSerializer(serializers.ModelSerializer):
         normalized = str(value).strip().upper() if value is not None else ''
         if len(normalized) != 2 or not normalized.isalpha():
             raise serializers.ValidationError(
-                'supplier_country must be an ISO 3166-1 alpha-2 code.'
+                'supplier_country must be a two-letter country code.'
             )
         return normalized

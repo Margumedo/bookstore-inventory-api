@@ -10,7 +10,6 @@ from django.db import IntegrityError, transaction
 
 from books.models import Book
 from books.tests.factories import BookFactory
-from books.validators import build_isbn13
 
 
 QUIJOTE_ISBN = '9788437604947'
@@ -68,7 +67,15 @@ class TestBookModel:
 
     def test_rejects_invalid_isbn_on_save(self):
         with pytest.raises(ValidationError):
-            BookFactory(isbn='1234567890')
+            BookFactory(isbn='12345')
+
+    def test_accepts_10_and_13_digit_isbn_without_checksum(self):
+        ten = BookFactory(isbn='1234567890')
+        thirteen = BookFactory(isbn='1234567890123')
+        ten.refresh_from_db()
+        thirteen.refresh_from_db()
+        assert ten.isbn == '1234567890'
+        assert thirteen.isbn == '1234567890123'
 
     def test_cost_usd_must_be_positive(self):
         with pytest.raises(IntegrityError):
@@ -76,7 +83,7 @@ class TestBookModel:
                 Book.objects.create(
                     title='Invalid cost',
                     author='Author',
-                    isbn=build_isbn13('978000000000'),
+                    isbn='1111111111111',
                     cost_usd=Decimal('0.00'),
                     stock_quantity=1,
                     category='Test',
@@ -87,3 +94,9 @@ class TestBookModel:
         book = BookFactory(stock_quantity=0)
         book.refresh_from_db()
         assert book.stock_quantity == 0
+
+    def test_negative_stock_violates_db_constraint(self):
+        book = BookFactory(stock_quantity=1)
+        with pytest.raises(IntegrityError):
+            with transaction.atomic():
+                Book.objects.filter(pk=book.pk).update(stock_quantity=-1)
