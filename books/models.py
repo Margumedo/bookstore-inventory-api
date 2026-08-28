@@ -17,12 +17,12 @@ class Book(models.Model):
         max_length=13,
         unique=True,
         validators=[validate_isbn],
-        help_text='ISBN-10 or ISBN-13. Separators are accepted and stripped before storage.',
+        help_text='ISBN-10 o ISBN-13. Se aceptan guiones y espacios; se guardan solo los digitos.',
     )
     cost_usd = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.01'), message='cost_usd must be greater than 0.')],
+        validators=[MinValueValidator(Decimal('0.01'), message='cost_usd debe ser mayor que 0.')],
     )
     selling_price_local = models.DecimalField(
         max_digits=10,
@@ -37,10 +37,10 @@ class Book(models.Model):
         validators=[
             RegexValidator(
                 regex=r'^[A-Za-z]{2}$',
-                message='supplier_country must be a two-letter country code.',
+                message='supplier_country debe ser un codigo de pais de dos letras.',
             )
         ],
-        help_text='Two-letter country code, e.g. ES.',
+        help_text='Codigo de pais de dos letras, por ejemplo ES.',
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

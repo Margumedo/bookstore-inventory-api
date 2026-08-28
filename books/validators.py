@@ -3,8 +3,7 @@ Validacion y normalizacion de ISBN.
 
 El enunciado pide 10 o 13 digitos y no admite duplicados. El ejemplo incluye
 guiones, asi que la API acepta separadores comunes y persiste solo el valor
-normalizado. No se valida checksum GS1: el requerimiento es de longitud, no
-de ISBN oficial.
+normalizado.
 """
 
 from __future__ import annotations
@@ -15,6 +14,9 @@ from django.core.exceptions import ValidationError
 
 
 ISBN_SEPARATORS_RE = re.compile(r'[\s-]+')
+
+ISBN_INVALID_MESSAGE = 'El ISBN debe contener 10 o 13 digitos.'
+ISBN_DUPLICATE_MESSAGE = 'Ya existe un libro con este ISBN.'
 
 
 def normalize_isbn(value: str) -> str:
@@ -38,7 +40,7 @@ def validate_isbn(value: str) -> str:
     normalized = normalize_isbn(value)
     if not is_valid_isbn(normalized):
         raise ValidationError(
-            'ISBN must contain 10 or 13 digits.',
+            ISBN_INVALID_MESSAGE,
             code='invalid_isbn',
         )
     return normalized

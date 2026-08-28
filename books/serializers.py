@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from books.models import Book
-from books.validators import validate_isbn
+from books.validators import ISBN_DUPLICATE_MESSAGE, validate_isbn
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -42,23 +42,23 @@ class BookSerializer(serializers.ModelSerializer):
         if self.instance is not None:
             queryset = queryset.exclude(pk=self.instance.pk)
         if queryset.exists():
-            raise serializers.ValidationError('A book with this ISBN already exists.')
+            raise serializers.ValidationError(ISBN_DUPLICATE_MESSAGE)
         return normalized
 
     def validate_cost_usd(self, value: Decimal) -> Decimal:
         if value is None or value <= 0:
-            raise serializers.ValidationError('cost_usd must be greater than 0.')
+            raise serializers.ValidationError('cost_usd debe ser mayor que 0.')
         return value
 
     def validate_stock_quantity(self, value: int) -> int:
         if value is None or value < 0:
-            raise serializers.ValidationError('stock_quantity must be greater than or equal to 0.')
+            raise serializers.ValidationError('stock_quantity debe ser mayor o igual a 0.')
         return value
 
     def validate_supplier_country(self, value: str) -> str:
         normalized = str(value).strip().upper() if value is not None else ''
         if len(normalized) != 2 or not normalized.isalpha():
             raise serializers.ValidationError(
-                'supplier_country must be a two-letter country code.'
+                'supplier_country debe ser un codigo de pais de dos letras.'
             )
         return normalized
