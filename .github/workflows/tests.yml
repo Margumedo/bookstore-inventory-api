@@ -1,0 +1,38 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: bookstore
+          POSTGRES_USER: bookstore_user
+          POSTGRES_PASSWORD: bookstore_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bookstore_user -d bookstore"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DJANGO_SECRET_KEY: ci-secret-key-not-for-production
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      DJANGO_SETTINGS_MODULE: bookstore.settings.development
+      DATABASE_URL: postgres://bookstore_user:bookstore_pass@localhost:5432/bookstore
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run tests
+        run: pytest -q

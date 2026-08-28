@@ -16,6 +16,8 @@ Local en un comando: `docker compose up --build` → `http://localhost:8000/api/
 
 Postman: importar `postman/Bookstore_Inventory_API.postman_collection.json` y Send/Runner. Apunta a produccion; no hace falta configurar URL.
 
+[![Tests](https://github.com/Margumedo/bookstore-inventory-api/actions/workflows/tests.yml/badge.svg)](https://github.com/Margumedo/bookstore-inventory-api/actions/workflows/tests.yml)
+
 ## Decisiones
 
 - Prefijo `/api/v1/` y barra final (convencion Django/DRF).
@@ -158,7 +160,12 @@ En produccion ademas: `DJANGO_SETTINGS_MODULE=bookstore.settings.production`.
 
 ## Tests
 
+Los tests usan PostgreSQL, no SQLite. En cada push, GitHub Actions levanta un Postgres temporal (no el de Render) y corre `pytest`.
+
+En local hace falta Postgres accesible con la `DATABASE_URL` de `.env.example` (por ejemplo `docker compose up db -d`):
+
 ```bash
+pip install -r requirements-dev.txt
 pytest
 ```
 
