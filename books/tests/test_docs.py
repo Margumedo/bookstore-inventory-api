@@ -8,6 +8,8 @@ import pytest
 from django.db.utils import OperationalError
 from rest_framework.test import APIClient
 
+from books.exceptions import api_exception_handler
+
 
 @pytest.fixture
 def api_client():
@@ -48,3 +50,10 @@ class TestDocsAndHealth:
         response = api_client.get('/', follow=False)
         assert response.status_code in (301, 302)
         assert '/api/docs/' in response.url
+
+
+class TestUnhandledExceptions:
+    def test_unexpected_error_returns_json_500(self):
+        response = api_exception_handler(RuntimeError('boom'), {'request': None})
+        assert response.status_code == 500
+        assert response.data == {'detail': 'Error interno del servidor.'}

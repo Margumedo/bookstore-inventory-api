@@ -27,6 +27,7 @@ Postman: importar `postman/Bookstore_Inventory_API.postman_collection.json` y Se
 - Precio sugerido: `cost_usd × tasa × 1.40`, redondeo half-up por paso (`15.99 × 0.85 = 13.59`, luego `19.03`).
 - Si la API de tasas falla: se usa `DEFAULT_EXCHANGE_RATE` y se responde **200** con `rate_source: fallback`. **503** solo si tampoco hay fallback usable.
 - `rate_source`: `live` | `cache` | `fallback`.
+- Si cambia `cost_usd` despues de calcular precio, `selling_price_local` vuelve a `null` hasta un nuevo `calculate-price`.
 
 ## Stack
 

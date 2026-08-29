@@ -2,6 +2,8 @@
 Tests de validacion del BookSerializer.
 """
 
+from decimal import Decimal
+
 import pytest
 
 from books.serializers import BookSerializer
@@ -108,6 +110,36 @@ class TestBookSerializer:
         assert serializer.is_valid(), serializer.errors
         book = serializer.save()
         assert book.selling_price_local is None
+
+    def test_changing_cost_usd_clears_selling_price_local(self):
+        book = BookFactory(
+            isbn='9788437604947',
+            cost_usd=Decimal('15.99'),
+            selling_price_local=Decimal('19.03'),
+        )
+        serializer = BookSerializer(
+            instance=book,
+            data={'cost_usd': '20.00'},
+            partial=True,
+        )
+        assert serializer.is_valid(), serializer.errors
+        updated = serializer.save()
+        assert updated.selling_price_local is None
+
+    def test_same_cost_usd_keeps_selling_price_local(self):
+        book = BookFactory(
+            isbn='9788437604947',
+            cost_usd=Decimal('15.99'),
+            selling_price_local=Decimal('19.03'),
+        )
+        serializer = BookSerializer(
+            instance=book,
+            data={'stock_quantity': 8},
+            partial=True,
+        )
+        assert serializer.is_valid(), serializer.errors
+        updated = serializer.save()
+        assert updated.selling_price_local == Decimal('19.03')
 
     def test_unique_isbn_uses_normalized_value(self):
         BookFactory(isbn='9780000000001')

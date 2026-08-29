@@ -2,12 +2,18 @@
 Errores HTTP en espanol.
 """
 
+import logging
+
 from django.db import IntegrityError
 from django.http import Http404
+from rest_framework import status
 from rest_framework.exceptions import MethodNotAllowed, NotFound, ValidationError
+from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
 from books.validators import ISBN_DUPLICATE_MESSAGE
+
+logger = logging.getLogger(__name__)
 
 
 def validation_error_from_book_integrity(exc: IntegrityError) -> ValidationError:
@@ -33,7 +39,11 @@ def validation_error_from_book_integrity(exc: IntegrityError) -> ValidationError
 def api_exception_handler(exc, context):
     response = exception_handler(exc, context)
     if response is None:
-        return None
+        logger.exception('Error no controlado.')
+        return Response(
+            {'detail': 'Error interno del servidor.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
     if isinstance(exc, (NotFound, Http404)) or response.status_code == 404:
         response.data = {'detail': 'No encontrado.'}

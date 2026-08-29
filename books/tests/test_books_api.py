@@ -119,6 +119,35 @@ class TestBookCRUD:
         assert response.data['title'] == 'El Quijote'
         assert response.data['stock_quantity'] == 8
 
+    @patch('books.services.exchange_rate.requests.get')
+    def test_updating_cost_usd_clears_selling_price(self, mock_get, api_client):
+        mock_get.return_value = _ok_response({'EUR': '0.85'})
+        book = BookFactory(cost_usd=Decimal('15.99'), isbn='9788437604947')
+        api_client.post(f'{BOOKS_URL}{book.id}/calculate-price/')
+        book.refresh_from_db()
+        assert book.selling_price_local == Decimal('19.03')
+
+        response = api_client.patch(
+            f'{BOOKS_URL}{book.id}/',
+            {'cost_usd': '20.00'},
+            format='json',
+        )
+        assert response.status_code == 200
+        assert response.data['selling_price_local'] is None
+
+    def test_updating_stock_keeps_selling_price(self, api_client):
+        book = BookFactory(
+            cost_usd=Decimal('15.99'),
+            selling_price_local=Decimal('19.03'),
+        )
+        response = api_client.patch(
+            f'{BOOKS_URL}{book.id}/',
+            {'stock_quantity': 8},
+            format='json',
+        )
+        assert response.status_code == 200
+        assert response.data['selling_price_local'] == '19.03'
+
     def test_delete_book(self, api_client):
         book = BookFactory()
         response = api_client.delete(f'{BOOKS_URL}{book.id}/')

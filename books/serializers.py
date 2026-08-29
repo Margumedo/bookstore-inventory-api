@@ -63,6 +63,12 @@ class BookSerializer(serializers.ModelSerializer):
             )
         return normalized
 
+    def update(self, instance, validated_data):
+        new_cost = validated_data.get('cost_usd')
+        if new_cost is not None and new_cost != instance.cost_usd:
+            validated_data['selling_price_local'] = None
+        return super().update(instance, validated_data)
+
 
 class PriceCalculationSerializer(serializers.Serializer):
     book_id = serializers.IntegerField()
