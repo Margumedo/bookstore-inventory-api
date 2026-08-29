@@ -16,7 +16,7 @@ from books.models import Book
 from books.serializers import BookSerializer, PriceCalculationSerializer
 from books.services.exchange_rate import ExchangeRateService, ExchangeRateUnavailableError
 from books.services.pricing import PricingService
-from books.validators import ISBN_DUPLICATE_MESSAGE
+from books.exceptions import validation_error_from_book_integrity
 
 
 CATEGORY_PARAM = OpenApiParameter(
@@ -100,17 +100,13 @@ class BookViewSet(viewsets.ModelViewSet):
         try:
             serializer.save()
         except IntegrityError as exc:
-            raise ValidationError(
-                {'isbn': [ISBN_DUPLICATE_MESSAGE]}
-            ) from exc
+            raise validation_error_from_book_integrity(exc) from exc
 
     def perform_update(self, serializer):
         try:
             serializer.save()
         except IntegrityError as exc:
-            raise ValidationError(
-                {'isbn': [ISBN_DUPLICATE_MESSAGE]}
-            ) from exc
+            raise validation_error_from_book_integrity(exc) from exc
 
     @action(detail=False, methods=['get'], url_path='search')
     def search(self, request):

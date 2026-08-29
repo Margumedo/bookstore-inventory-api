@@ -7,8 +7,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
+from django.db import IntegrityError
 from django.test import override_settings
 from rest_framework.test import APIClient
+
+from books.exceptions import validation_error_from_book_integrity
 
 from books.tests.factories import BookFactory
 
@@ -62,6 +65,17 @@ class TestBookCRUD:
         response = api_client.post(BOOKS_URL, _payload(), format='json')
         assert response.status_code == 400
         assert 'isbn' in response.data
+
+    def test_check_constraint_is_not_reported_as_duplicate_isbn(self, api_client):
+        error = IntegrityError(
+            'new row for relation "books_book" violates check constraint '
+            '"book_cost_usd_positive"'
+        )
+        with patch('books.models.Book.save', side_effect=error):
+            response = api_client.post(BOOKS_URL, _payload(), format='json')
+        assert response.status_code == 400
+        assert 'isbn' not in response.data
+        assert 'cost_usd' in response.data
 
     def test_list_books(self, api_client):
         BookFactory.create_batch(2)
@@ -219,3 +233,27 @@ class TestCalculatePrice:
         book = BookFactory(cost_usd=Decimal('15.99'))
         response = api_client.post(f'{BOOKS_URL}{book.id}/calculate-price/')
         assert response.status_code == 503
+
+
+class TestIntegrityErrorMapping:
+    def test_unique_isbn_maps_to_isbn_field(self):
+        error = validation_error_from_book_integrity(
+            IntegrityError(
+                'duplicate key value violates unique constraint "books_book_isbn_key"'
+            )
+        )
+        assert 'isbn' in error.detail
+
+    def test_cost_check_maps_to_cost_usd(self):
+        error = validation_error_from_book_integrity(
+            IntegrityError(
+                'new row violates check constraint "book_cost_usd_positive"'
+            )
+        )
+        assert 'cost_usd' in error.detail
+        assert 'isbn' not in error.detail
+
+    def test_unknown_integrity_error_uses_detail(self):
+        error = validation_error_from_book_integrity(IntegrityError('deadlock detected'))
+        assert 'detail' in error.detail
+        assert 'isbn' not in error.detail
